@@ -3,10 +3,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { EmailService } from './email-service.js';
 import * as nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
+import type { Mock } from 'vitest';
 import type { EmailServiceOptions } from './interfaces/email-service-options.interface.js';
 
 // Mock nodemailer
-vi.mock('nodemailer');
+vi.mock('nodemailer', () => ({
+  createTransport: vi.fn(),
+}));
 
 describe('EmailService', () => {
   let emailService: EmailService;
@@ -22,6 +25,13 @@ describe('EmailService', () => {
   };
 
   beforeEach(async () => {
+    // Mock createTransport before initializing EmailService
+    transporter = {
+      sendMail: vi.fn().mockResolvedValue('Email sent successfully'),
+    } as unknown as Transporter;
+
+    (nodemailer.createTransport as Mock).mockReturnValue(transporter);
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EmailService,
@@ -33,12 +43,6 @@ describe('EmailService', () => {
     }).compile();
 
     emailService = module.get<EmailService>(EmailService);
-
-    transporter = {
-      sendMail: vi.fn().mockResolvedValue('Email sent successfully'),
-    } as unknown as Transporter;
-
-    (nodemailer.createTransport as any).mockReturnValue(transporter);
   });
 
   it('should be defined', () => {
@@ -51,6 +55,7 @@ describe('EmailService', () => {
       'Test Subject',
       'Test Body',
     );
+
     expect(transporter.sendMail).toHaveBeenCalledWith({
       from: mockOptions.from,
       to: 'recipient@example.com',
