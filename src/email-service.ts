@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
-import type { EmailServiceOptions } from './interfaces/email-service-options.interface.js';
+import type { EmailServiceOptions } from './interfaces/email-service-options.interface';
 import type { Transporter } from 'nodemailer';
 
 @Injectable()
