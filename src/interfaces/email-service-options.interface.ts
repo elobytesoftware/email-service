@@ -1,8 +1,13 @@
 export interface EmailServiceOptions {
-  host: string;
-  port: number;
-  secure: boolean; // True for 465, false for other ports
-  user: string; // Your SMTP username
-  pass: string; // Your SMTP password
-  from: string; // Default sender email address
+  host?: string; // Optional, only for SMTP
+  port?: number; // Optional, only for SMTP
+  secure?: boolean; // Optional, only for SMTP
+  service?: 'gmail' | 'office365' | 'aws-ses'; // Add support for service-based transporters
+  user: string;
+  pass: string;
+  from: string; // Sender address
+  // Optional field for additional options like tls
+  tls?: {
+    ciphers?: string;
+  };
 }
