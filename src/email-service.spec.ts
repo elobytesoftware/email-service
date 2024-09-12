@@ -19,8 +19,10 @@ describe('EmailService', () => {
     host: 'smtp.example.com',
     port: 465,
     secure: true,
-    user: 'user@example.com',
-    pass: 'password',
+    auth: {
+      user: 'user@example.com',
+      pass: 'password',
+    },
     from: 'noreply@example.com',
   };
 
@@ -50,19 +52,46 @@ describe('EmailService', () => {
   });
 
   it('should send an email', async () => {
-    const result = await emailService.sendEmail(
-      'recipient@example.com',
-      'Test Subject',
-      'Test Body',
-    );
+    const result = await emailService.sendEmail({
+      to: 'recipient@example.com',
+      subject: 'Test Subject',
+      text: 'Test Body',
+    });
 
     expect(transporter.sendMail).toHaveBeenCalledWith({
       from: mockOptions.from,
       to: 'recipient@example.com',
       subject: 'Test Subject',
       text: 'Test Body',
+      html: undefined, // Ensure HTML is not included
+    });
+    expect(result).toBe('Email sent successfully');
+  });
+  it('should send an email with HTML content', async () => {
+    const result = await emailService.sendEmail({
+      to: 'recipient@example.com',
+      subject: 'Test Subject',
+      html: '<p>Test Body</p>',
+    });
+
+    expect(transporter.sendMail).toHaveBeenCalledWith({
+      from: mockOptions.from,
+      to: 'recipient@example.com',
+      subject: 'Test Subject',
+      text: undefined, // Ensure text is not included
+      html: '<p>Test Body</p>',
     });
 
     expect(result).toBe('Email sent successfully');
+  });
+
+  it('should throw an error if neither text nor HTML content is provided', async () => {
+    await expect(() =>
+      emailService.sendEmail({
+        to: 'recipient@example.com',
+        subject: 'Test Subject',
+        from: 'noreply@example.com',
+      }),
+    ).rejects.toThrow('Either "text" or "html" content is required.');
   });
 });

@@ -1,19 +1,35 @@
 import { Module, Global } from '@nestjs/common';
-import type { DynamicModule } from '@nestjs/common';
 import { EmailService } from './email-service';
+import type { DynamicModule } from '@nestjs/common';
 import type { EmailServiceOptions } from './interfaces/email-service-options.interface';
 
 @Global()
-@Module({})
+@Module({
+  providers: [
+    EmailService,
+    {
+      provide: 'EMAIL_SERVICE_OPTIONS',
+      useValue: {
+        service: 'gmail',
+        auth: {
+          user: process.env.USER_EMAIL,
+          pass: process.env.USER_PASSWORD,
+        },
+        from: process.env.USER_EMAIL,
+      } as EmailServiceOptions, // Provide default values
+    },
+  ],
+  exports: [EmailService],
+})
 export class EmailServiceModule {
-  // Synchronous initialization with forRoot
-  static forRoot(options: EmailServiceOptions): DynamicModule {
+  // Default options will be fetched from environment variables inside the service
+  static register(options?: EmailServiceOptions): DynamicModule {
     return {
       module: EmailServiceModule,
       providers: [
         {
           provide: 'EMAIL_SERVICE_OPTIONS',
-          useValue: options,
+          useValue: options || {}, // Pass empty object if no options provided
         },
         EmailService,
       ],
@@ -21,7 +37,12 @@ export class EmailServiceModule {
     };
   }
 
-  // Asynchronous initialization with forRootAsync
+  // Synchronous initialization with forRoot (for manual configuration)
+  static forRoot(options: EmailServiceOptions): DynamicModule {
+    return this.register(options);
+  }
+
+  // Asynchronous initialization with forRootAsync (for manual configuration)
   static forRootAsync(optionsProvider: {
     useFactory: (
       ...args: any[]

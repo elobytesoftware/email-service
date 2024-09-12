@@ -1,13 +1,21 @@
+// email-services.enum.ts
+export enum EmailServices {
+  Gmail = 'gmail',
+  Office365 = 'office365',
+  AwsSes = 'aws-ses',
+}
+
 export interface EmailServiceOptions {
-  host?: string; // Optional, only for SMTP
-  port?: number; // Optional, only for SMTP
-  secure?: boolean; // Optional, only for SMTP
-  service?: 'gmail' | 'office365' | 'aws-ses'; // Add support for service-based transporters
-  user?: string;
-  pass?: string;
+  host?: string; // Optional, only for custom SMTP
+  port?: number; // Optional, only for custom SMTP
+  secure?: boolean; // Optional, only for custom SMTP
+  service?: EmailServices | string; // Add support for service-based transporters and custom services
+  auth?: {
+    user?: string; // Email account username
+    pass?: string; // Email account password
+  };
   from?: string; // Sender address
-  // Optional field for additional options like tls
   tls?: {
-    ciphers?: string;
+    ciphers?: string; // Optional field for additional TLS options
   };
 }
