@@ -40,9 +40,6 @@ You can configure the email service using environment variables. The following v
 ```bash
 # Email service settings
 ELO_MAILER_SERVICE_NAME=gmail
-ELO_MAILER_HOST=smtp.gmail.com
-ELO_MAILER_PORT=465
-ELO_MAILER_SECURE=true
 
 # Authentication details
 ELO_MAILER_USER_EMAIL=example@gmail.com
@@ -138,6 +135,12 @@ await emailService.sendEmail({
       // Binary buffer as an attachment
       filename: 'text2.txt',
       content: Buffer.from('hello world!', 'utf-8'),
+    },
+    {
+      // encoded string as an attachment
+      filename: 'text1.txt',
+      content: 'aGVsbG8gd29ybGQh',
+      encoding: 'base64',
     },
     {
       // File on disk as an attachment

@@ -12,10 +12,10 @@ import type { EmailServiceOptions } from './interfaces/email-service-options.int
       useValue: {
         service: 'gmail',
         auth: {
-          user: process.env.USER_EMAIL,
-          pass: process.env.USER_PASSWORD,
+          user: process.env.ELO_MAILER_USER_EMAIL,
+          pass: process.env.ELO_MAILER_USER_PASSWORD,
         },
-        from: process.env.USER_EMAIL,
+        from: process.env.ELO_MAILER_FROM_EMAIL,
       } as EmailServiceOptions, // Provide default values
     },
   ],
