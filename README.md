@@ -4,10 +4,11 @@ This package provides a simple, configurable email service for NestJS applicatio
 
 ## Features
 
-- Support for major email providers (Gmail, Office365, AWS SES, etc.)
+- Support for major email providers (Gmail, Office365, AWS SES, etc.).
 - Ability to customize email sending configurations.
 - Default configuration through environment variables.
 - Supports both HTML and plain-text email templates.
+- **Supports attachments** for sending files or inline images.
 
 ## Installation
 
@@ -56,7 +57,7 @@ ELO_MAILER_TLS_CIPHERS=SSLv3
 
 ### Notes:
 
-- If you are using aws-ses Or custom smtp (`ELO_MAILER_SERVICE_NAME=aws-ses/smtp`), make sure to provide `ELO_MAILER_HOST`, `ELO_MAILER_PORT`, and `ELO_MAILER_SECURE` as needed.
+- If you are using aws-ses or custom SMTP (`ELO_MAILER_SERVICE_NAME=aws-ses/smtp`), make sure to provide `ELO_MAILER_HOST`, `ELO_MAILER_PORT`, and `ELO_MAILER_SECURE` as needed.
 
 ### 2. Setting Up the Module
 
@@ -66,7 +67,7 @@ You can register the `EmailServiceModule` in your `AppModule` or any other modul
 
 ```ts
 import { Module } from '@nestjs/common';
-import { EmailServiceModule } from 'your-email-service-package';
+import { EmailServiceModule } from 'elo-mailer';
 
 @Module({
   imports: [EmailServiceModule.forRoot()], // Will pull settings from environment variables
@@ -100,7 +101,7 @@ Once the `EmailServiceModule` is registered, you can inject the `EmailService` i
 
 ```ts
 import { Injectable } from '@nestjs/common';
-import { EmailService } from 'your-email-service-package';
+import { EmailService } from 'elo-mailer';
 
 @Injectable()
 export class SomeService {
@@ -116,6 +117,51 @@ export class SomeService {
 }
 ```
 
+### 4. Sending Emails with Attachments
+
+The `EmailService` now supports sending emails with attachments. You can include files, URLs, or inline images as attachments by providing an array of `Attachment` objects.
+
+#### Example with Attachments:
+
+```ts
+await emailService.sendEmail({
+  to: 'recipient@example.com',
+  subject: 'Important documents',
+  text: 'Please find the attached documents.',
+  attachments: [
+    {
+      // Plain text attachment
+      filename: 'text1.txt',
+      content: 'hello world!',
+    },
+    {
+      // Binary buffer as an attachment
+      filename: 'text2.txt',
+      content: Buffer.from('hello world!', 'utf-8'),
+    },
+    {
+      // File on disk as an attachment
+      filename: 'document.pdf',
+      path: '/path/to/document.pdf', // Stream this file
+    },
+    {
+      // Inline image (CID)
+      filename: 'image.png',
+      path: '/path/to/image.png',
+      cid: 'unique@cid', // Specify content id for inline use
+    },
+  ],
+});
+```
+
+#### Attachment Options
+
+- `filename`: Name of the attached file.
+- `content`: String, Buffer, or Stream content of the attachment.
+- `path`: Path to the file or URL.
+- `cid`: Content ID for inline use (images).
+- `contentType`: Optional content type (derived automatically from the filename if not provided).
+
 ## API
 
 ### `EmailService`
@@ -130,12 +176,14 @@ interface SendEmailOptions {
   subject: string; // Email subject
   text?: string; // Plain text content
   html?: string; // HTML content
+  attachments?: Attachment[]; // Attachments for the email
 }
 ```
 
 ### Notes:
 
-Eather text or HTML content can be provided.
+- Either text or HTML content can be provided.
+- Attachments can be added in various formats (files, URLs, inline images).
 
 Example:
 
@@ -143,7 +191,8 @@ Example:
 await emailService.sendEmail({
   to: 'recipient@example.com',
   subject: 'Hello World!',
-  html: '<p>This is an HTML email.</p>',
+  html: '<p>This is an HTML email with an attachment.</p>',
+  attachments: [{ filename: 'text1.txt', content: 'Hello World!' }],
 });
 ```
 
