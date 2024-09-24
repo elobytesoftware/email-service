@@ -1,4 +1,4 @@
-# Email Service Package
+# ELO MAILER Package
 
 This package provides a simple, configurable email service for NestJS applications, built on top of `Nodemailer`. It supports various email providers and can be configured using environment variables or by providing custom options.
 
@@ -12,7 +12,7 @@ This package provides a simple, configurable email service for NestJS applicatio
 ## Installation
 
 ```bash
-npm install your-email-service-package
+npm install elo-mailer
 ```
 
 ## Usage
@@ -21,19 +21,42 @@ npm install your-email-service-package
 
 You can configure the email service using environment variables. The following variables are available:
 
-| Variable        | Description                            |
-| --------------- | -------------------------------------- |
-| `USER_EMAIL`    | The email address to send emails from. |
-| `USER_PASSWORD` | The password for the email account.    |
-| `EMAIL_FROM`    | The default "from" email address.      |
+#### Available Environment Variables
 
-Example `.env` file:
+| Environment Variable       | Description                                                                                        | Default                                   |
+| -------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| `ELO_MAILER_SERVICE_NAME`  | The email service provider (e.g., `gmail`, `office365`, `aws-ses`, `smtp`).                        | `gmail`                                   |
+| `ELO_MAILER_HOST`          | The SMTP host for the email service provider.                                                      | Depends on the service name               |
+| `ELO_MAILER_PORT`          | The SMTP port. If not provided, defaults to `465` for secure connections and `587` for non-secure. | `465` (if secure) / `587` (if not secure) |
+| `ELO_MAILER_SECURE`        | Whether to use a secure connection (`true` or `false`).                                            | `true`                                    |
+| `ELO_MAILER_USER_EMAIL`    | The email address to authenticate with and send emails from.                                       | `undefined` (required)                    |
+| `ELO_MAILER_USER_PASSWORD` | The password for the email account used to authenticate the SMTP connection.                       | `undefined` (required)                    |
+| `ELO_MAILER_FROM_EMAIL`    | The default email address used in the "from" field when sending emails.                            | Same as `ELO_MAILER_USER_EMAIL`           |
+| `ELO_MAILER_TLS_CIPHERS`   | Custom TLS ciphers for secure connections (useful for Office365).                                  | `SSLv3` (for Office365)                   |
+
+#### Example `.env` File
 
 ```bash
-USER_EMAIL=example@gmail.com
-USER_PASSWORD=yourpassword
-EMAIL_FROM=example@gmail.com
+# Email service settings
+ELO_MAILER_SERVICE_NAME=gmail
+ELO_MAILER_HOST=smtp.gmail.com
+ELO_MAILER_PORT=465
+ELO_MAILER_SECURE=true
+
+# Authentication details
+ELO_MAILER_USER_EMAIL=example@gmail.com
+ELO_MAILER_USER_PASSWORD=yourpassword
+
+# Optional 'from' address
+ELO_MAILER_FROM_EMAIL=customsender@example.com
+
+# Optional custom TLS settings (for Office365)
+ELO_MAILER_TLS_CIPHERS=SSLv3
 ```
+
+### Notes:
+
+- If you are using aws-ses Or custom smtp (`ELO_MAILER_SERVICE_NAME=aws-ses/smtp`), make sure to provide `ELO_MAILER_HOST`, `ELO_MAILER_PORT`, and `ELO_MAILER_SECURE` as needed.
 
 ### 2. Setting Up the Module
 
@@ -53,23 +76,22 @@ export class AppModule {}
 
 #### Option 2: Providing Custom Configuration
 
-```ts
-import { Module } from '@nestjs/common';
-import { EmailServiceModule } from 'your-email-service-package';
+```bash
+# Custom SMTP server settings
+ELO_MAILER_SERVICE_NAME=smtp
+ELO_MAILER_HOST=smtp.custom-server.com
+ELO_MAILER_PORT=587
+ELO_MAILER_SECURE=false  # Set to 'false' for non-secure connections, 'true' for secure
 
-@Module({
-  imports: [
-    EmailServiceModule.forRoot({
-      service: 'gmail',
-      auth: {
-        user: 'your-email@gmail.com',
-        pass: 'your-password',
-      },
-      from: 'your-email@gmail.com',
-    }),
-  ],
-})
-export class AppModule {}
+# Authentication details for the custom SMTP server
+ELO_MAILER_USER_EMAIL=you@custom-server.com
+ELO_MAILER_USER_PASSWORD=yourpassword
+
+# Optional 'from' address
+ELO_MAILER_FROM_EMAIL=support@custom-server.com
+
+# Optional custom TLS settings (if needed for your server)
+ELO_MAILER_TLS_CIPHERS=TLSv1.2
 ```
 
 ### 3. Sending Emails
@@ -94,39 +116,6 @@ export class SomeService {
 }
 ```
 
-### 4. Customization with Async Configuration
-
-You can asynchronously configure the email service by using `forRootAsync`.
-
-```ts
-import { Module } from '@nestjs/common';
-import { GmailController } from './gmail.controller';
-import { GmailService } from './gmail.service';
-import { EmailServiceModule } from 'elo-email-service';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-
-@Module({
-  imports: [
-    ConfigModule, // Make sure ConfigModule is imported
-    EmailServiceModule.forRootAsync({
-      imports: [ConfigModule], // Ensure ConfigModule is available here
-      inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
-        user: configService.get<string>('GMAIL_USER'),
-        pass: configService.get<string>('GMAIL_APP_PASSWORD'),
-        from: configService.get<string>('GMAIL_USER'),
-      }),
-    }),
-  ],
-  controllers: [GmailController],
-  providers: [GmailService],
-})
-export class GmailModule {}
-```
-
 ## API
 
 ### `EmailService`
@@ -141,9 +130,12 @@ interface SendEmailOptions {
   subject: string; // Email subject
   text?: string; // Plain text content
   html?: string; // HTML content
-  from?: string; // Sender email address (optional)
 }
 ```
+
+### Notes:
+
+Eather text or HTML content can be provided.
 
 Example:
 
@@ -151,7 +143,6 @@ Example:
 await emailService.sendEmail({
   to: 'recipient@example.com',
   subject: 'Hello World!',
-  text: 'This is a plain text email.',
   html: '<p>This is an HTML email.</p>',
 });
 ```

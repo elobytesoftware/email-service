@@ -24,16 +24,15 @@ export class EmailService {
   private mergeOptionsWithDefaults(
     options: EmailServiceOptions,
   ): EmailServiceOptions {
-    const defaults = getEmailServiceDefaults(options.service, options);
+    const defaults = getEmailServiceDefaults();
 
     return {
       ...defaults,
       ...options, // User-provided options override defaults
       auth: {
-        user: process.env.USER_EMAIL || options.auth?.user, // Env or user-specified
-        pass: process.env.USER_PASSWORD || options.auth?.pass, // Env or user-specified
+        user: process.env.ELO_MAILER_USER_EMAIL || options.auth?.user, // Updated env for user email
+        pass: process.env.ELO_MAILER_USER_PASSWORD || options.auth?.pass, // Updated env for user password
       },
-      from: process.env.EMAIL_FROM || options.from, // Default from address from env
     };
   }
 
@@ -52,29 +51,20 @@ export class EmailService {
 
   // Method to send an email
   async sendEmail(options: SendEmailOptions) {
-    const { to, subject, text, html, from } = options;
-    const senderEmail = from || this.options.from;
-
-    if (!senderEmail) {
-      throw new Error('The "from" email address is required.');
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(senderEmail)) {
-      throw new Error('Invalid "from" email address');
-    }
+    const { to, subject, text, html, attachments } = options;
 
     if (!text && !html) {
       throw new Error('Either "text" or "html" content is required.');
+    } else if (text && html) {
+      throw new Error('Only one of "text" or "html" content is allowed.');
     }
 
     const mailOptions = {
-      from: senderEmail,
       to,
       subject,
       text, // Text content
       html, // HTML content
+      attachments,
     };
 
     return await this.transporter.sendMail(mailOptions);

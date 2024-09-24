@@ -59,7 +59,6 @@ describe('EmailService', () => {
     });
 
     expect(transporter.sendMail).toHaveBeenCalledWith({
-      from: mockOptions.from,
       to: 'recipient@example.com',
       subject: 'Test Subject',
       text: 'Test Body',
@@ -75,7 +74,6 @@ describe('EmailService', () => {
     });
 
     expect(transporter.sendMail).toHaveBeenCalledWith({
-      from: mockOptions.from,
       to: 'recipient@example.com',
       subject: 'Test Subject',
       text: undefined, // Ensure text is not included
@@ -90,7 +88,6 @@ describe('EmailService', () => {
       emailService.sendEmail({
         to: 'recipient@example.com',
         subject: 'Test Subject',
-        from: 'noreply@example.com',
       }),
     ).rejects.toThrow('Either "text" or "html" content is required.');
   });
